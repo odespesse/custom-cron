@@ -1,11 +1,24 @@
 #! /usr/bin/python
+# -*- encoding: utf8 -*-
 
 import subprocess, sys, smtplib, os
 from tempfile import mkstemp
 from email.mime.text import MIMEText
 
+class CustomCron(object):
+
+	MIN_ARGS_NUMBER = 3
+
+	def __init__(self, args):
+		self.args = args
+
+	def is_not_enough_args(self):
+		return len(self.args) < CustomCron.MIN_ARGS_NUMBER
+
 if __name__ == '__main__':
-	if len(sys.argv) < 3:
+	c = CustomCron(sys.argv)
+
+	if c.is_not_enough_args():
 		print "Usage : log_path dest_mail script_path srcipt_args*"
 		sys.exit(1)
 
@@ -46,6 +59,6 @@ if __name__ == '__main__':
 
 		# Send the message via our own SMTP server, but don't include the
 		# envelope header.
-		s = smtplib.SMTP('localhost')
-		s.sendmail(me, [you], msg.as_string())
-		s.quit()
+		# s = smtplib.SMTP('localhost')
+		# s.sendmail(me, [you], msg.as_string())
+		# s.quit()
