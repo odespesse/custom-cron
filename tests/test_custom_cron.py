@@ -10,14 +10,38 @@ class TestCustomCron(unittest.TestCase):
 
     def test_enough_args(self):
         args = ['NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
-        c = CustomCron(args)
-        self.assertFalse(c.is_not_enough_args(), "Should be enough args")
+        custom_cron = CustomCron(args)
+        self.assertFalse(custom_cron.is_not_enough_args(), "Should be enough args")
 
     def test_not_enough_args(self):
         args = ['NO_LOG', 'NO_MAIL']
-        c = CustomCron(args)
-        self.assertTrue(c.is_not_enough_args(), "Should be not enough args")
+        custom_cron = CustomCron(args)
+        self.assertTrue(custom_cron.is_not_enough_args(), "Should be not enough args")
 
+    def test_parse_no_args(self):
+        args = ['NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        self.assertFalse(custom_cron.is_log_needed(), "Should not log")
+        self.assertFalse(custom_cron.is_email_needed(), "Should not send mail")
+        self.assertIsNone(custom_cron.log_path, "Should be None")
+        self.assertIsNone(custom_cron.email_address, "Should be None")
+        self.assertEqual(custom_cron.script_to_execute, "echo", "Bad command")
+        self.assertEqual(len(custom_cron.script_to_execute_args), 2, "Unexpected number of parameters")
+        self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
+        self.assertEqual(custom_cron.script_to_execute_args[1], "world", "Bad parameter")
+
+    def test_parse_args(self):
+        args = ['logfile.log', 'foo@bar.com', 'echo', 'hello']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        self.assertTrue(custom_cron.is_log_needed(), "Should log")
+        self.assertTrue(custom_cron.is_email_needed(), "Should send mail")
+        self.assertEqual(custom_cron.log_path, "logfile.log", "Should be logfile.log")
+        self.assertEqual(custom_cron.email_address, "foo@bar.com", "Should be foo@bar.com")
+        self.assertEqual(custom_cron.script_to_execute, "echo", "Bad command")
+        self.assertEqual(len(custom_cron.script_to_execute_args), 1, "Unexpected number of parameters")
+        self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
 
 if __name__ == "__main__":
     unittest.main()
