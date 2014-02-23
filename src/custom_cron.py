@@ -34,6 +34,14 @@ class CustomCron(object):
 	def is_email_needed(self):
 		return self.email_address is not None
 
+	def execute_script(self):
+		if os.path.isfile(self.script_to_execute):
+			script_args = []
+			script_args.append(self.script_to_execute)
+			for i in range(len(self.script_to_execute_args)):
+				script_args.append(self.script_to_execute_args[i])
+			subprocess.call(script_args)
+
 if __name__ == '__main__':
 	custom_cron = CustomCron(sys.argv)
 
@@ -46,14 +54,7 @@ if __name__ == '__main__':
 	_, tmp_name = mkstemp(text=True)
 	tmp_log = open(tmp_name,'w')
 
-	script_args = []
-	for i in xrange(3, len(sys.argv)):
-		script_args.append(sys.argv[i])
-
-	if os.path.isfile(custom_cron.script_to_execute):
-		script_ret = subprocess.call(script_args, stdout=tmp_log, stderr=subprocess.STDOUT)
-	else:
-		script_ret = 1
+	custom_cron.execute_script()
 
 	tmp_log_read = open(tmp_name, 'r')
 	script_output = tmp_log_read.read()
@@ -62,6 +63,7 @@ if __name__ == '__main__':
 		with open(custom_cron.log_path,'a') as log:
 			log.write(script_output)
 
+	script_ret = 0
 	if custom_cron.is_email_needed():
 		msg = MIMEText(script_output)
 

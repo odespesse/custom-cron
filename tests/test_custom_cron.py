@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- encoding: utf8 -*-
 
+import os
 import unittest
 
 from src.custom_cron import CustomCron
@@ -42,6 +43,17 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(custom_cron.script_to_execute, "echo", "Bad command")
         self.assertEqual(len(custom_cron.script_to_execute_args), 1, "Unexpected number of parameters")
         self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
+
+    def test_simple_hello_script(self):
+        args = ['NO_LOG', 'NO_MAIL', './hello.sh']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("./world"), "Result file not found")
+        with open("./world", 'r') as f:
+            line = f.readline()
+            self.assertEqual(line, "Hello World\n", "Content do not match")
+        os.remove("./world")
 
 if __name__ == "__main__":
     unittest.main()
