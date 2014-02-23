@@ -55,5 +55,16 @@ class TestCustomCron(unittest.TestCase):
             self.assertEqual(line, "Hello World\n", "Content do not match")
         os.remove("./world")
 
+    def test_args_hello_script(self):
+        args = ['NO_LOG', 'NO_MAIL', './hello_args.sh', 'Hello', 'world', 'foo bar']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("./world_args"), "Result file not found")
+        with open("./world_args", 'r') as f:
+            line = f.readline()
+            self.assertEqual(line, "Arg 1 : Hello - Arg 2 : world - Arg 3 : foo bar\n", "Content do not match")
+        os.remove("./world_args")
+
 if __name__ == "__main__":
     unittest.main()
