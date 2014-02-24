@@ -46,7 +46,7 @@ class CustomCron(object):
 			subprocess.call(script_args, stdout = self.tmp_log)
 
 	def write_log(self):
-		with open(self.log_path,'w') as log:
+		with open(self.log_path, 'a') as log:
 			self.tmp_log.seek(0)
 			self.script_output = self.tmp_log.read()
 			log.write(self.script_output)

@@ -74,8 +74,21 @@ class TestCustomCron(unittest.TestCase):
         custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
         with open("./log", 'r') as f:
-            line = f.readline()
+            line = f.read()
             self.assertEqual(line, "So far so good !\n", "Content do not match")
+        os.remove("./log")
+
+    def test_log_hello_multiple_script(self):
+        args = ['log', 'NO_MAIL', './hello.sh']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        custom_cron.write_log()
+        custom_cron.write_log()
+        self.assertTrue(os.path.isfile("./log"), "No log file created")
+        with open("./log", 'r') as f:
+            line = f.read()
+            self.assertEqual(line, "So far so good !\nSo far so good !\n", "Content do not match")
         os.remove("./log")
 
 if __name__ == "__main__":
