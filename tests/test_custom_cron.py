@@ -91,5 +91,17 @@ class TestCustomCron(unittest.TestCase):
             self.assertEqual(line, "So far so good !\nSo far so good !\n", "Content do not match")
         os.remove("./log")
 
+    def test_log_error_script(self):
+        args = ['log', 'NO_MAIL', './error.sh']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        custom_cron.write_log()
+        self.assertTrue(os.path.isfile("./log"), "No log file created")
+        with open("./log", 'r') as f:
+            line = f.read()
+            self.assertEqual(line, "So far so good !\ncp: missing file operand\nTry 'cp --help' for more information.\n", "Content do not match")
+        os.remove("./log")
+
 if __name__ == "__main__":
     unittest.main()
