@@ -143,6 +143,20 @@ class TestCustomCron(unittest.TestCase):
         mail_content = 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./error.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !\ncp: missing file operand\nTry \'cp --help\' for more information.' 
         self.assertEqual(local_smtp_server.data, mail_content, 'Bad message')
 
+    def test_multiple_mails_hello_script(self):
+        self.server_thread = self._instanciate_local_smtp_server(1027)
+        local_smtp_server = self.server_thread.server
+        smtp_connection = smtplib.SMTP('127.0.0.1', 1027)
+        args = ['NO_LOG', 'test@localhost,foo@bar', './hello.sh']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        custom_cron.send_email(smtp_connection)
+        self.assertEqual(len(local_smtp_server.rcpttos), 2)
+        self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.rcpttos[1], 'foo@bar', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost,foo@bar\n\nSo far so good !', 'Bad message')
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()

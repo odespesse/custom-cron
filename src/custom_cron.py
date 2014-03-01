@@ -64,7 +64,7 @@ class CustomCron(object):
 		msg['Subject'] = '%s <%s> : %s' % (subject, hostname, self.script_to_execute)
 		msg['From'] = 'custom_cron'
 		msg['To'] = self.email_address
-		smtp_connection.sendmail('custom_cron', [self.email_address], msg.as_string())
+		smtp_connection.sendmail('custom_cron', self.email_address.split(','), msg.as_string())
 		smtp_connection.quit()
 
 	def _create_tmp_log_file(self):
