@@ -51,6 +51,17 @@ class CustomCron(object):
 			self.script_output = self.tmp_log.read()
 			log.write(self.script_output)
 
+	def send_email(self, smtp_connection):
+		self.tmp_log.seek(0)
+		self.script_output = self.tmp_log.read()
+		msg = MIMEText(self.script_output)
+		hostname = os.uname()[1]
+		msg['Subject'] = '%s <%s> : %s' % ("[Cron : OK]", hostname, self.script_to_execute)
+		msg['From'] = 'custom_cron'
+		msg['To'] = self.email_address
+		smtp_connection.sendmail('custom_cron', [self.email_address], msg.as_string())
+		smtp_connection.quit()
+
 	def _create_tmp_log_file(self):
 		self.tmp_log = TemporaryFile()
 
@@ -67,22 +78,6 @@ if __name__ == '__main__':
 	if custom_cron.is_log_needed():
 		custom_cron.write_log()
 
-	script_ret = 0
 	if custom_cron.is_email_needed():
-		msg = MIMEText(custom_cron.script_output)
-
-		if script_ret == 0:
-			status = "[CRON : OK]"
-		else:
-			status = "[CRON : FAIL]"
-
-		hostname = os.uname()[1]
-		msg['Subject'] = '%s <%s> : %s' % (status, hostname, custom_cron.script_to_execute)
-		# msg['From'] = me
-		msg['To'] = custom_cron.email_address
-
-		# Send the message via our own SMTP server, but don't include the
-		# envelope header.
-		# s = smtplib.SMTP('localhost')
-		# s.sendmail(me, [you], msg.as_string())
-		# s.quit()
+		smtp_connection = smtplib.SMTP('localhost')
+		custom_cron.send_email(smtp_connection)
