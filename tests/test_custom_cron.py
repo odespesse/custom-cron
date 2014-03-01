@@ -117,7 +117,7 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./log")
 
     def test_mail_hello_script(self):
-        self.server_thread = self._instanciate_local_smtp_server()
+        self.server_thread = self._instanciate_local_smtp_server(1025)
         local_smtp_server = self.server_thread.server
         smtp_connection = smtplib.SMTP('127.0.0.1', 1025)
         args = ['NO_LOG', 'test@localhost', './hello.sh']
@@ -129,8 +129,22 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !', 'Bad message')
 
-    def _instanciate_local_smtp_server(self):
-        smtp_server = LocalSMTPServer()
+    def test_mail_error_script(self):
+        self.server_thread = self._instanciate_local_smtp_server(1026)
+        local_smtp_server = self.server_thread.server
+        smtp_connection = smtplib.SMTP('127.0.0.1', 1026)
+        args = ['NO_LOG', 'test@localhost', './error.sh']
+        custom_cron = CustomCron(args)
+        custom_cron.parse_arguments()
+        custom_cron.execute_script()
+        custom_cron.send_email(smtp_connection)
+        self.assertEqual(len(local_smtp_server.rcpttos), 1)
+        self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
+        mail_content = 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./error.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !\ncp: missing file operand\nTry \'cp --help\' for more information.' 
+        self.assertEqual(local_smtp_server.data, mail_content, 'Bad message')
+
+    def _instanciate_local_smtp_server(self, port):
+        smtp_server = LocalSMTPServer(port)
         smtp_server.start()
         while smtp_server.ready is not True:
             pass
@@ -139,13 +153,14 @@ class TestCustomCron(unittest.TestCase):
 
 class LocalSMTPServer(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, port):
         threading.Thread.__init__(self)
         self.ready = False
         self.server = None
+        self._port = port
 
     def run(self):
-        self.server = CustomSMTPServer(('127.0.0.1', 1025), None)
+        self.server = CustomSMTPServer(('127.0.0.1', self._port), None)
         self.ready = True
         asyncore.loop(timeout=1)
 
