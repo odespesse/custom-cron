@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 
 class CustomCron(object):
 
-	MIN_ARGS_NUMBER = 3
+	MIN_ARGS_NUMBER = 4
 
 	def __init__(self, args):
 		self.args = args
@@ -23,11 +23,11 @@ class CustomCron(object):
 		return len(self.args) < CustomCron.MIN_ARGS_NUMBER
 
 	def parse_arguments(self):
-		self.log_path = self.args[0] if self.args[0] != "NO_LOG" else None
-		self.email_address = self.args[1] if self.args[1] != "NO_MAIL" else None
-		script_to_execute_position = 2
+		self.log_path = self.args[1] if self.args[1] != "NO_LOG" else None
+		self.email_address = self.args[2] if self.args[2] != "NO_MAIL" else None
+		script_to_execute_position = 3
 		self.script_to_execute = self.args[script_to_execute_position]
-		args_start_position = 3
+		args_start_position = 4
 		for i in xrange(args_start_position, len(self.args)):
 			self.script_to_execute_args.append(self.args[i])
 

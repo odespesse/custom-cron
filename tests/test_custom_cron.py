@@ -23,17 +23,17 @@ class TestCustomCron(unittest.TestCase):
             self.server_thread.stop()
 
     def test_enough_args(self):
-        args = ['NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
+        args = ['custom_cron.py', 'NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
         custom_cron = CustomCron(args)
         self.assertFalse(custom_cron.is_not_enough_args(), "Should be enough args")
 
     def test_not_enough_args(self):
-        args = ['NO_LOG', 'NO_MAIL']
+        args = ['custom_cron.py', 'NO_LOG', 'NO_MAIL']
         custom_cron = CustomCron(args)
         self.assertTrue(custom_cron.is_not_enough_args(), "Should be not enough args")
 
     def test_parse_no_args(self):
-        args = ['NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
+        args = ['custom_cron.py', 'NO_LOG', 'NO_MAIL', 'echo', 'hello', 'world']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         self.assertFalse(custom_cron.is_log_needed(), "Should not log")
@@ -46,7 +46,7 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(custom_cron.script_to_execute_args[1], "world", "Bad parameter")
 
     def test_parse_args(self):
-        args = ['logfile.log', 'foo@bar.com', 'echo', 'hello']
+        args = ['custom_cron.py', 'logfile.log', 'foo@bar.com', 'echo', 'hello']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         self.assertTrue(custom_cron.is_log_needed(), "Should log")
@@ -58,7 +58,7 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
 
     def test_simple_hello_script(self):
-        args = ['NO_LOG', 'NO_MAIL', './hello.sh']
+        args = ['custom_cron.py', 'NO_LOG', 'NO_MAIL', './hello.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -69,7 +69,7 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./world")
 
     def test_args_hello_script(self):
-        args = ['NO_LOG', 'NO_MAIL', './hello_args.sh', 'Hello', 'world', 'foo bar']
+        args = ['custom_cron.py', 'NO_LOG', 'NO_MAIL', './hello_args.sh', 'Hello', 'world', 'foo bar']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -80,7 +80,7 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./world_args")
 
     def test_log_hello_script(self):
-        args = ['log', 'NO_MAIL', './hello.sh']
+        args = ['custom_cron.py', 'log', 'NO_MAIL', './hello.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -92,7 +92,7 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./log")
 
     def test_log_hello_multiple_script(self):
-        args = ['log', 'NO_MAIL', './hello.sh']
+        args = ['custom_cron.py', 'log', 'NO_MAIL', './hello.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -105,7 +105,7 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./log")
 
     def test_log_error_script(self):
-        args = ['log', 'NO_MAIL', './error.sh']
+        args = ['custom_cron.py', 'log', 'NO_MAIL', './error.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -120,7 +120,7 @@ class TestCustomCron(unittest.TestCase):
         self.server_thread = self._instanciate_local_smtp_server(1025)
         local_smtp_server = self.server_thread.server
         smtp_connection = smtplib.SMTP('127.0.0.1', 1025)
-        args = ['NO_LOG', 'test@localhost', './hello.sh']
+        args = ['custom_cron.py', 'NO_LOG', 'test@localhost', './hello.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -133,7 +133,7 @@ class TestCustomCron(unittest.TestCase):
         self.server_thread = self._instanciate_local_smtp_server(1026)
         local_smtp_server = self.server_thread.server
         smtp_connection = smtplib.SMTP('127.0.0.1', 1026)
-        args = ['NO_LOG', 'test@localhost', './error.sh']
+        args = ['custom_cron.py', 'NO_LOG', 'test@localhost', './error.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
@@ -147,7 +147,7 @@ class TestCustomCron(unittest.TestCase):
         self.server_thread = self._instanciate_local_smtp_server(1027)
         local_smtp_server = self.server_thread.server
         smtp_connection = smtplib.SMTP('127.0.0.1', 1027)
-        args = ['NO_LOG', 'test@localhost,foo@bar', './hello.sh']
+        args = ['custom_cron.py', 'NO_LOG', 'test@localhost,foo@bar', './hello.sh']
         custom_cron = CustomCron(args)
         custom_cron.parse_arguments()
         custom_cron.execute_script()
