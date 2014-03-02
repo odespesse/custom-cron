@@ -17,7 +17,6 @@ class CustomCron(object):
 		self.script_to_execute_args = []
 		self.script_output = ""
 		self.script_exit_code = 0
-		self.tmp_log = None
 
 	def is_not_enough_args(self):
 		return len(self.args) < CustomCron.MIN_ARGS_NUMBER
@@ -39,22 +38,20 @@ class CustomCron(object):
 
 	def execute_script(self):
 		if os.path.isfile(self.script_to_execute):
-			self._create_tmp_log_file()
-			script_args = []
-			script_args.append(self.script_to_execute)
-			for i in range(len(self.script_to_execute_args)):
-				script_args.append(self.script_to_execute_args[i])
-			self.script_exit_code = subprocess.call(script_args, stdout = self.tmp_log, stderr=subprocess.STDOUT)
+			with TemporaryFile() as tmp_log:
+				script_args = []
+				script_args.append(self.script_to_execute)
+				for i in range(len(self.script_to_execute_args)):
+					script_args.append(self.script_to_execute_args[i])
+				self.script_exit_code = subprocess.call(script_args, stdout = tmp_log, stderr=subprocess.STDOUT)
+				tmp_log.seek(0)
+				self.script_output = tmp_log.read()
 
 	def write_log(self):
 		with open(self.log_path, 'a') as log:
-			self.tmp_log.seek(0)
-			self.script_output = self.tmp_log.read()
 			log.write(self.script_output)
 
 	def send_email(self, smtp_connection):
-		self.tmp_log.seek(0)
-		self.script_output = self.tmp_log.read()
 		if self.script_exit_code == 0:
 			subject = "[Cron : OK]"
 		else:
@@ -66,9 +63,6 @@ class CustomCron(object):
 		msg['To'] = self.email_address
 		smtp_connection.sendmail('custom_cron', self.email_address.split(','), msg.as_string())
 		smtp_connection.quit()
-
-	def _create_tmp_log_file(self):
-		self.tmp_log = TemporaryFile()
 
 if __name__ == '__main__':
 	custom_cron = CustomCron(sys.argv)
