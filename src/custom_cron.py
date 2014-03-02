@@ -39,10 +39,7 @@ class CustomCron(object):
 	def execute_script(self):
 		if os.path.isfile(self.script_to_execute):
 			with TemporaryFile() as tmp_log:
-				script_args = []
-				script_args.append(self.script_to_execute)
-				for i in range(len(self.script_to_execute_args)):
-					script_args.append(self.script_to_execute_args[i])
+				script_args = [self.script_to_execute] + self.script_to_execute_args
 				self.script_exit_code = subprocess.call(script_args, stdout = tmp_log, stderr=subprocess.STDOUT)
 				tmp_log.seek(0)
 				self.script_output = tmp_log.read()
