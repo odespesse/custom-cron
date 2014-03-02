@@ -84,5 +84,9 @@ if __name__ == '__main__':
 		custom_cron.write_log()
 
 	if custom_cron.is_email_needed():
-		smtp_connection = smtplib.SMTP('localhost')
+		smtp_connection = smtplib.SMTP("smtp.gmail.com",587)
+		smtp_connection.ehlo()
+		smtp_connection.starttls()
+		smtp_connection.ehlo()
+		smtp_connection.login('login', 'pwd')
 		custom_cron.send_email(smtp_connection)
