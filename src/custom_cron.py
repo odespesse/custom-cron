@@ -43,6 +43,7 @@ class CustomCron(object):
 				self.script_exit_code = subprocess.call(script_args, stdout = tmp_log, stderr=subprocess.STDOUT)
 				tmp_log.seek(0)
 				self.script_output = tmp_log.read()
+				print(self.script_output)
 		else:
 			self.script_output = "ERROR : Script " + self.script_to_execute + " not found\n"
 
