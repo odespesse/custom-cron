@@ -1,13 +1,12 @@
 #! /usr/bin/python
 # -*- encoding: utf8 -*-
 
-import subprocess, sys, smtplib, os
+import subprocess, smtplib, os, sys
 from tempfile import TemporaryFile
 from email.mime.text import MIMEText
+import argparse
 
 class CustomCron(object):
-
-	MIN_ARGS_NUMBER = 4
 
 	def __init__(self, args):
 		self.args = args
@@ -17,18 +16,13 @@ class CustomCron(object):
 		self.script_to_execute_args = []
 		self.script_output = ""
 		self.script_exit_code = 0
+		self.parser = None
 
-	def is_not_enough_args(self):
-		return len(self.args) < CustomCron.MIN_ARGS_NUMBER
-
-	def parse_arguments(self):
-		self.log_path = self.args[1] if self.args[1] != "NO_LOG" else None
-		self.email_address = self.args[2] if self.args[2] != "NO_MAIL" else None
-		script_to_execute_position = 3
-		self.script_to_execute = self.args[script_to_execute_position]
-		args_start_position = 4
-		for i in xrange(args_start_position, len(self.args)):
-			self.script_to_execute_args.append(self.args[i])
+	def dispatch_arguments(self):
+		self.log_path = self.args.log_path
+		self.email_address = self.args.email_address
+		self.script_to_execute = self.args.script_to_execute
+		self.script_to_execute_args = self.args.script_to_execute_args
 
 	def is_log_needed(self):
 		return self.log_path is not None
@@ -64,21 +58,36 @@ class CustomCron(object):
 		smtp_connection.sendmail('custom_cron', self.email_address.split(','), msg.as_string())
 		smtp_connection.quit()
 
+
+class ArgumentsParser(object):
+
+	def __init__(self):
+		self.parser = argparse.ArgumentParser(description='Handle the execution of an other script in order to log and/or send the result by email')
+		self.parser.add_argument('--logfile', action='store', default = None, dest = 'log_path',
+								help='path where to log the output')
+		self.parser.add_argument('--email', action='store', default = None, dest = 'email_address',
+								help='email address (comma separated) to send the output')
+		self.parser.add_argument('script_to_execute',
+								help='the script to execute')
+		self.parser.add_argument('--script_args', nargs='+', dest = 'script_to_execute_args', default = [],
+								help='arguments for the script to execute ')
+
+	def parse(self, arguments):
+		return self.parser.parse_args(args = arguments)
+
+
 if __name__ == '__main__':
-	custom_cron = CustomCron(sys.argv)
+	args = ArgumentsParser().parse(sys.argv[1:])
+	custom_cron = CustomCron(args)
 
-	if custom_cron.is_not_enough_args():
-		print "Usage : log_path dest_mail script_path srcipt_args*"
-		sys.exit(1)
-
-	custom_cron.parse_arguments()
+	custom_cron.dispatch_arguments()
 	custom_cron.execute_script()
 
 	if custom_cron.is_log_needed():
 		custom_cron.write_log()
 
 	if custom_cron.is_email_needed():
-		smtp_connection = smtplib.SMTP("smtp.gmail.com",587)
+		smtp_connection = smtplib.SMTP("smtp.gmail.com", 587)
 		smtp_connection.ehlo()
 		smtp_connection.starttls()
 		smtp_connection.ehlo()
