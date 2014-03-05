@@ -19,19 +19,19 @@ Handle the execution of an other script in order to log and/or send the result b
 	               \[--script_args SCRIPT_TO_EXECUTE_ARGS \[SCRIPT_TO_EXECUTE_ARGS ...\]\]
 			script_to_execute
 
-	__-h__
+	-h
 		help message
 
-	__--logfile__ 
+	--logfile 
 		path where to log the output
 
-	__--email__
+	--email
 		email address (comma separated) to send the output
 
-	__script\_to\_execute__
+	script_to_execute
 		the script to execute
 
-	__--script_args__
+	--script_args
 		arguments for the script to execute
 
 ## Usage
@@ -48,7 +48,8 @@ If you want the output to be logged in file.log just write :
 If the script need arguments (foo, bar and "hello world) to be passed and say you want the output to be sent at your@email.com write :
 
 	* */1 * * * root /path/to/custom_cron.py --email your@email.com /other/path/to/my_script.py --script_args foo bar "hello world"
-or 
+or
+
 	* */1 * * * root /path/to/custom_cron.py --email your@email.com --script_args foo bar "hello world" -- /other/path/to/my_script.py
 
 ## License
