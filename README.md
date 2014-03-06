@@ -52,6 +52,15 @@ or
 
 	* */1 * * * root /path/to/custom_cron.py --email your@email.com --script_args foo bar "hello world" -- /other/path/to/my_script.py
 
+Although you already could send an email with cron the subject of the email isn't particularly useful.
+Custom Cron on the other will send an email subject like
+
+	[Execution result] <hostname> command
+
+the execution result could be [Cron : OK] if the command returned 0 or [Cron : Fail] otherwise.
+As soon as you receive the email you will be able to know if you need to take a look at it immediately because of an error or if it can wait.
+
+
 ## License
 
 GNU GENERAL PUBLIC LICENSE Version 3
