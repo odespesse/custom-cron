@@ -15,7 +15,7 @@ class CustomCron(object):
 		self.script_to_execute = self.args.script_to_execute
 		self.script_to_execute_args = self.args.script_to_execute_args
 		self.script_output = ""
-		self.script_exit_code = 0
+		self.script_exit_code = 1
 		self.parser = None
 
 	def is_log_needed(self):
@@ -31,9 +31,10 @@ class CustomCron(object):
 				self.script_exit_code = subprocess.call(script_args, stdout = tmp_log, stderr=subprocess.STDOUT)
 				tmp_log.seek(0)
 				self.script_output = tmp_log.read()
-				print(self.script_output)
 		else:
 			self.script_output = "ERROR : Script " + self.script_to_execute + " not found\n"
+
+		print(self.script_output)
 
 	def write_log(self):
 		with open(self.log_path, 'a') as log:
