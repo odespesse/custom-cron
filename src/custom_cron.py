@@ -10,19 +10,13 @@ class CustomCron(object):
 
 	def __init__(self, args):
 		self.args = args
-		self.log_path = None
-		self.email_address = None
-		self.script_to_execute = None
-		self.script_to_execute_args = []
-		self.script_output = ""
-		self.script_exit_code = 0
-		self.parser = None
-
-	def dispatch_arguments(self):
 		self.log_path = self.args.log_path
 		self.email_address = self.args.email_address
 		self.script_to_execute = self.args.script_to_execute
 		self.script_to_execute_args = self.args.script_to_execute_args
+		self.script_output = ""
+		self.script_exit_code = 0
+		self.parser = None
 
 	def is_log_needed(self):
 		return self.log_path is not None
@@ -79,8 +73,6 @@ class ArgumentsParser(object):
 if __name__ == '__main__':
 	args = ArgumentsParser().parse(sys.argv[1:])
 	custom_cron = CustomCron(args)
-
-	custom_cron.dispatch_arguments()
 	custom_cron.execute_script()
 
 	if custom_cron.is_log_needed():

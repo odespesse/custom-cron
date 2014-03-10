@@ -27,7 +27,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute =  'echo'
         self.args.script_to_execute_args = ['hello', 'world']
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         self.assertFalse(custom_cron.is_log_needed(), "Should not log")
         self.assertFalse(custom_cron.is_email_needed(), "Should not send mail")
         self.assertIsNone(custom_cron.log_path, "Should be None")
@@ -43,7 +42,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.log_path = 'logfile.log'
         self.args.email_address = 'foo@bar.com'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         self.assertTrue(custom_cron.is_log_needed(), "Should log")
         self.assertTrue(custom_cron.is_email_needed(), "Should send mail")
         self.assertEqual(custom_cron.log_path, "logfile.log", "Should be logfile.log")
@@ -55,7 +53,6 @@ class TestCustomCron(unittest.TestCase):
     def test_simple_hello_script(self):
         self.args.script_to_execute =  './hello.sh'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         self.assertTrue(os.path.isfile("./world"), "Result file not found")
         with open("./world", 'r') as f:
@@ -67,7 +64,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello_args.sh'
         self.args.script_to_execute_args = ['Hello', 'world', 'foo bar']
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         self.assertTrue(os.path.isfile("./world_args"), "Result file not found")
         with open("./world_args", 'r') as f:
@@ -79,7 +75,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './unknow.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
@@ -92,7 +87,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
@@ -105,7 +99,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.write_log()
         custom_cron.write_log()
@@ -119,7 +112,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './error.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
@@ -135,7 +127,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello.sh'
         self.args.email_address = 'test@localhost'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
@@ -149,7 +140,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './error.sh'
         self.args.email_address = 'test@localhost'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
@@ -164,7 +154,6 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello.sh'
         self.args.email_address = 'test@localhost,foo@bar'
         custom_cron = CustomCron(self.args)
-        custom_cron.dispatch_arguments()
         custom_cron.execute_script()
         custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 2)
