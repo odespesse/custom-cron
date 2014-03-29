@@ -28,6 +28,9 @@ Handle the execution of an other script in order to log and/or send the result b
 	--email
 		email address (comma separated) to send the output
 
+	--email_only_on_fail
+		do not send an email if the script to execute ended successfully
+
 	script_to_execute
 		the script to execute
 
