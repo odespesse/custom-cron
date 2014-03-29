@@ -12,6 +12,7 @@ class CustomCron(object):
 		self.args = args
 		self.log_path = self.args.log_path
 		self.email_address = self.args.email_address
+		self.email_only_on_fail = self.args.email_only_on_fail
 		self.script_to_execute = self.args.script_to_execute
 		self.script_to_execute_args = self.args.script_to_execute_args
 		self.script_output = ""
@@ -33,7 +34,6 @@ class CustomCron(object):
 				self.script_output = tmp_log.read()
 		else:
 			self.script_output = "ERROR : Script " + self.script_to_execute + " not found\n"
-
 		print(self.script_output)
 
 	def write_log(self):
@@ -41,6 +41,9 @@ class CustomCron(object):
 			log.write(self.script_output)
 
 	def send_email(self, smtp_connection):
+		if self.email_only_on_fail and self.script_exit_code == 0:
+			smtp_connection.quit()
+			return
 		if self.script_exit_code == 0:
 			subject = "[Cron : OK]"
 		else:
@@ -62,6 +65,8 @@ class ArgumentsParser(object):
 								help='path where to log the output')
 		self.parser.add_argument('--email', action='store', default = None, dest = 'email_address',
 								help='email address (comma separated) to send the output')
+		self.parser.add_argument('--email_only_on_fail', action='store_true', default = False, dest = 'email_only_on_fail',
+								help='send an email only if the script to execute failed')
 		self.parser.add_argument('script_to_execute',
 								help='the script to execute')
 		self.parser.add_argument('--script_args', nargs='+', dest = 'script_to_execute_args', default = [],

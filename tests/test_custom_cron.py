@@ -174,6 +174,32 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./unknow.sh\nFrom: custom_cron\nTo: test@localhost\n\nERROR : Script ./unknow.sh not found', 'Bad message')
 
+    def test_email_if_option_and_status_ko(self):
+        self.server_thread = self._instanciate_local_smtp_server(1029)
+        local_smtp_server = self.server_thread.server
+        smtp_connection = smtplib.SMTP('127.0.0.1', 1029)
+        self.args.script_to_execute = './unknow.sh'
+        self.args.email_address = 'test@localhost'
+        self.args.email_only_on_fail = True
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        custom_cron.send_email(smtp_connection)
+        self.assertEqual(len(local_smtp_server.rcpttos), 1)
+        self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./unknow.sh\nFrom: custom_cron\nTo: test@localhost\n\nERROR : Script ./unknow.sh not found', 'Bad message')
+
+    def test_no_email_if_option_and_status_ok(self):
+        self.server_thread = self._instanciate_local_smtp_server(1030)
+        local_smtp_server = self.server_thread.server
+        smtp_connection = smtplib.SMTP('127.0.0.1', 1030)
+        self.args.script_to_execute = './hello.sh'
+        self.args.email_address = 'test@localhost'
+        self.args.email_only_on_fail = True
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        custom_cron.send_email(smtp_connection)
+        self.assertIsNone(local_smtp_server.rcpttos, 'Should not receive email')
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()
@@ -187,6 +213,7 @@ class ScriptArguments(object):
     def __init__(self):
         self.log_path = None
         self.email_address = None
+        self.email_only_on_fail = False
         self.script_to_execute = None
         self.script_to_execute_args = []
 
