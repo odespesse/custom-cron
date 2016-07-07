@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # -*- encoding: utf8 -*-
 
 import asyncore
@@ -238,7 +238,7 @@ class LocalSMTPServer(threading.Thread):
 class CustomSMTPServer(smtpd.SMTPServer):
 
     def __init__(self, local_addr, remote_addr):
-        smtpd.SMTPServer.__init__(self, local_addr, remote_addr)
+        smtpd.SMTPServer.__init__(self, local_addr, remote_addr, decode_data=True)
         self.peer = None
         self.mailfrom = None
         self.rcpttos = None

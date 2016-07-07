@@ -1,10 +1,11 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # -*- encoding: utf8 -*-
 
 import subprocess, smtplib, os, sys
 from tempfile import TemporaryFile
 from email.mime.text import MIMEText
 import argparse
+
 
 class CustomCron(object):
 
@@ -27,7 +28,7 @@ class CustomCron(object):
 
 	def execute_script(self):
 		if os.path.isfile(self.script_to_execute):
-			with TemporaryFile() as tmp_log:
+			with TemporaryFile(mode='w+t', encoding='utf-8') as tmp_log:
 				script_args = [self.script_to_execute] + self.script_to_execute_args
 				self.script_exit_code = subprocess.call(script_args, stdout = tmp_log, stderr=subprocess.STDOUT)
 				tmp_log.seek(0)
@@ -37,7 +38,7 @@ class CustomCron(object):
 		print(self.script_output)
 
 	def write_log(self):
-		with open(self.log_path, 'a') as log:
+		with open(self.log_path, 'a', encoding='utf-8') as log:
 			log.write(self.script_output)
 
 	def send_email(self, smtp_connection):
