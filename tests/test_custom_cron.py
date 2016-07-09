@@ -22,33 +22,8 @@ class TestCustomCron(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         if self.server_thread is not None:
             self.server_thread.stop()
-
-    def test_parse_no_args(self):
-        self.args.script_to_execute = 'echo'
-        self.args.script_to_execute_args = ['hello', 'world']
-        custom_cron = CustomCron(self.args)
-        self.assertFalse(custom_cron.is_log_needed(), "Should not log")
-        self.assertFalse(custom_cron.is_email_needed(), "Should not send mail")
-        self.assertIsNone(custom_cron.log_path, "Should be None")
-        self.assertIsNone(custom_cron.email_address, "Should be None")
-        self.assertEqual(custom_cron.script_to_execute, "echo", "Bad command")
-        self.assertEqual(len(custom_cron.script_to_execute_args), 2, "Unexpected number of parameters")
-        self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
-        self.assertEqual(custom_cron.script_to_execute_args[1], "world", "Bad parameter")
-
-    def test_parse_args(self):
-        self.args.script_to_execute = 'echo'
-        self.args.script_to_execute_args = ['hello']
-        self.args.log_path = 'logfile.log'
-        self.args.email_address = 'foo@bar.com'
-        custom_cron = CustomCron(self.args)
-        self.assertTrue(custom_cron.is_log_needed(), "Should log")
-        self.assertTrue(custom_cron.is_email_needed(), "Should send mail")
-        self.assertEqual(custom_cron.log_path, "logfile.log", "Should be logfile.log")
-        self.assertEqual(custom_cron.email_address, "foo@bar.com", "Should be foo@bar.com")
-        self.assertEqual(custom_cron.script_to_execute, "echo", "Bad command")
-        self.assertEqual(len(custom_cron.script_to_execute_args), 1, "Unexpected number of parameters")
-        self.assertEqual(custom_cron.script_to_execute_args[0], "hello", "Bad parameter")
+        if os.path.isfile("./log"):
+            os.remove("./log")
 
     def test_simple_hello_script(self):
         self.args.script_to_execute = './hello.sh'
@@ -76,49 +51,30 @@ class TestCustomCron(unittest.TestCase):
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
         with open("./log", 'r') as f:
             line = f.read()
             self.assertEqual(line, "ERROR : Script ./unknown.sh not found\n", "Content do not match")
-        os.remove("./log")
 
     def test_log_hello_script(self):
         self.args.script_to_execute = './hello.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
         with open("./log", 'r') as f:
             line = f.read()
             self.assertEqual(line, "So far so good !\n", "Content do not match")
-        os.remove("./log")
-
-    def test_log_hello_multiple_script(self):
-        self.args.script_to_execute = './hello.sh'
-        self.args.log_path = 'log'
-        custom_cron = CustomCron(self.args)
-        custom_cron.execute_script()
-        custom_cron.write_log()
-        custom_cron.write_log()
-        self.assertTrue(os.path.isfile("./log"), "No log file created")
-        with open("./log", 'r') as f:
-            line = f.read()
-            self.assertEqual(line, "So far so good !\nSo far so good !\n", "Content do not match")
-        os.remove("./log")
 
     def test_log_error_script(self):
         self.args.script_to_execute = './error.sh'
         self.args.log_path = 'log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        custom_cron.write_log()
         self.assertTrue(os.path.isfile("./log"), "No log file created")
         with open("./log", 'r') as f:
             line = f.read()
             self.assertEqual(line, "So far so good !\ncp: missing file operand\nTry 'cp --help' for more information.\n", "Content do not match")
-        os.remove("./log")
 
     def test_mail_hello_script(self):
         self.server_thread = self._instanciate_local_smtp_server(1025)
@@ -126,9 +82,8 @@ class TestCustomCron(unittest.TestCase):
         smtp_connection = smtplib.SMTP('127.0.0.1', 1025)
         self.args.script_to_execute = './hello.sh'
         self.args.email_address = 'test@localhost'
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !', 'Bad message')
@@ -139,9 +94,8 @@ class TestCustomCron(unittest.TestCase):
         smtp_connection = smtplib.SMTP('127.0.0.1', 1026)
         self.args.script_to_execute = './error.sh'
         self.args.email_address = 'test@localhost'
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         mail_content = 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./error.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !\ncp: missing file operand\nTry \'cp --help\' for more information.' 
@@ -153,9 +107,8 @@ class TestCustomCron(unittest.TestCase):
         smtp_connection = smtplib.SMTP('127.0.0.1', 1027)
         self.args.script_to_execute = './hello.sh'
         self.args.email_address = 'test@localhost,foo@bar'
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 2)
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.rcpttos[1], 'foo@bar', 'Wrong dest email')
@@ -167,9 +120,8 @@ class TestCustomCron(unittest.TestCase):
         smtp_connection = smtplib.SMTP('127.0.0.1', 1028)
         self.args.script_to_execute = './unknown.sh'
         self.args.email_address = 'test@localhost'
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./unknown.sh\nFrom: custom_cron\nTo: test@localhost\n\nERROR : Script ./unknown.sh not found', 'Bad message')
@@ -181,9 +133,8 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './unknown.sh'
         self.args.email_address = 'test@localhost'
         self.args.email_only_on_fail = True
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertEqual(len(local_smtp_server.rcpttos), 1)
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./unknown.sh\nFrom: custom_cron\nTo: test@localhost\n\nERROR : Script ./unknown.sh not found', 'Bad message')
@@ -195,9 +146,8 @@ class TestCustomCron(unittest.TestCase):
         self.args.script_to_execute = './hello.sh'
         self.args.email_address = 'test@localhost'
         self.args.email_only_on_fail = True
-        custom_cron = CustomCron(self.args)
+        custom_cron = CustomCron(self.args, smtp_connection)
         custom_cron.execute_script()
-        custom_cron.send_email(smtp_connection)
         self.assertIsNone(local_smtp_server.rcpttos, 'Should not receive email')
 
     def _instanciate_local_smtp_server(self, port):
