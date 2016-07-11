@@ -22,8 +22,8 @@ class TestCustomCron(unittest.TestCase):
         unittest.TestCase.tearDown(self)
         if self.server_thread is not None:
             self.server_thread.stop()
-        if os.path.isfile("./log"):
-            os.remove("./log")
+        if os.path.isfile("/tmp/log"):
+            os.remove("/tmp/log")
 
     def test_simple_hello_script(self):
         self.args.script_to_execute = './hello.sh'
@@ -32,8 +32,8 @@ class TestCustomCron(unittest.TestCase):
         self.assertTrue(os.path.isfile("./world"), "Result file not found")
         with open("./world", 'r') as f:
             line = f.readline()
-            self.assertEqual(line, "Hello World\n", "Content do not match")
         os.remove("./world")
+        self.assertEqual(line, "Hello World\n", "Content do not match")
 
     def test_args_hello_script(self):
         self.args.script_to_execute = './hello_args.sh'
@@ -43,38 +43,38 @@ class TestCustomCron(unittest.TestCase):
         self.assertTrue(os.path.isfile("./world_args"), "Result file not found")
         with open("./world_args", 'r') as f:
             line = f.readline()
-            self.assertEqual(line, "Arg 1 : Hello - Arg 2 : world - Arg 3 : foo bar\n", "Content do not match")
         os.remove("./world_args")
+        self.assertEqual(line, "Arg 1 : Hello - Arg 2 : world - Arg 3 : foo bar\n", "Content do not match")
 
     def test_log_script_not_found(self):
         self.args.script_to_execute = './unknown.sh'
-        self.args.log_path = 'log'
+        self.args.log_path = '/tmp/log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        self.assertTrue(os.path.isfile("./log"), "No log file created")
-        with open("./log", 'r') as f:
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
             line = f.read()
-            self.assertEqual(line, "ERROR : Script ./unknown.sh not found\n", "Content do not match")
+        self.assertEqual(line, "ERROR : Script ./unknown.sh not found\n", "Content do not match")
 
     def test_log_hello_script(self):
         self.args.script_to_execute = './hello.sh'
-        self.args.log_path = 'log'
+        self.args.log_path = '/tmp/log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        self.assertTrue(os.path.isfile("./log"), "No log file created")
-        with open("./log", 'r') as f:
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
             line = f.read()
-            self.assertEqual(line, "So far so good !\n", "Content do not match")
+        self.assertEqual(line, "So far so good !\n", "Content do not match")
 
     def test_log_error_script(self):
         self.args.script_to_execute = './error.sh'
-        self.args.log_path = 'log'
+        self.args.log_path = '/tmp/log'
         custom_cron = CustomCron(self.args)
         custom_cron.execute_script()
-        self.assertTrue(os.path.isfile("./log"), "No log file created")
-        with open("./log", 'r') as f:
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
             line = f.read()
-            self.assertEqual(line, "So far so good !\ncp: missing file operand\nTry 'cp --help' for more information.\n", "Content do not match")
+        self.assertEqual(line, "So far so good !\ncp: missing file operand\nTry 'cp --help' for more information.\n", "Content do not match")
 
     def test_mail_hello_script(self):
         self.server_thread = self._instanciate_local_smtp_server(1025)
