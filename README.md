@@ -15,12 +15,15 @@ Then you need to copy the file custom_cron.py on your system and make sure it is
 
 Handle the execution of an other script in order to log and/or send the result by email
 
-	custom_cron.py \[-h\] \[--logfile LOG_PATH\] \[--email EMAIL_ADDRESS\]
+	custom_cron.py \[-h\] \[\--configuration CONFIGURATION_PATH\] \[--logfile LOG_PATH\] \[--email EMAIL_ADDRESS\]
 	               \[--script_args SCRIPT_TO_EXECUTE_ARGS \[SCRIPT_TO_EXECUTE_ARGS ...\]\]
 			script_to_execute
 
 	-h
 		help message
+
+    --configuration
+        path to the configuration file
 
 	--logfile 
 		path where to log the output
@@ -56,13 +59,32 @@ or
 	* */1 * * * root /path/to/custom_cron.py --email your@email.com --script_args foo bar "hello world" -- /other/path/to/my_script.py
 
 Although you already could send an email with cron the subject of the email isn't particularly useful.
-Custom Cron on the other will send an email subject like
+Custom Cron will send an email subject like :
 
 	[Execution result] <hostname> command
 
 the execution result could be [Cron : OK] if the command returned 0 or [Cron : Fail] otherwise.
 As soon as you receive the email you will be able to know if you need to take a look at it immediately because of an error or if it can wait.
 
+## Configuration file
+
+If you have to many arguments, you can simplify the script configuration by putting everything inside a file.
+The file is in a simple INI format. You just need to write a file like this (let's name it "configuration.ini") :
+
+    [script]
+    path = ./hello.sh
+    arguments = Hello world
+
+    [log]
+    path = /tmp/log
+
+    [email]
+    to = your@email.com
+    only_on_fail = no
+
+Then you just need to tell where to find this configuration :
+
+    * */1 * * * root /path/to/custom_cron.py --configuration /other/path/to/configuration.ini
 
 ## License
 

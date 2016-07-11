@@ -150,6 +150,24 @@ class TestCustomCron(unittest.TestCase):
         custom_cron.execute_script()
         self.assertIsNone(local_smtp_server.rcpttos, 'Should not receive email')
 
+    def test_configuration_file_default_path(self):
+        self.server_thread = self._instanciate_local_smtp_server(1031)
+        local_smtp_server = self.server_thread.server
+        smtp_connection = smtplib.SMTP('127.0.0.1', 1031)
+        self.args.configuration_path = os.getcwd() + '/configuration.ini'
+        custom_cron = CustomCron(self.args, smtp_connection)
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("/tmp/log"), "Result file not found")
+        with open("/tmp/log", 'r') as f:
+            line = f.readline()
+        if os.path.isfile("./world_args"):
+            os.remove("./world_args")
+        self.assertEqual(line, "Arg 1 : Hello - Arg 2 : world - Arg 3 : bar\n", "Content do not match")
+        self.assertEqual(len(local_smtp_server.rcpttos), 2)
+        self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.rcpttos[1], 'foo@bar', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello_args.sh\nFrom: custom_cron\nTo: test@localhost,foo@bar\n\nArg 1 : Hello - Arg 2 : world - Arg 3 : bar', 'Bad message')
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()
@@ -162,6 +180,7 @@ class ScriptArguments(object):
 
     def __init__(self):
         self.log_path = None
+        self.configuration_path = None
         self.email_address = None
         self.email_only_on_fail = False
         self.script_to_execute = None

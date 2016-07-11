@@ -5,11 +5,13 @@ import subprocess, smtplib, os, sys
 from tempfile import TemporaryFile
 from email.mime.text import MIMEText
 import argparse
+import configparser
 
 
 class CustomCron(object):
 
     def __init__(self, args, smtp_connection=None):
+        self.configuration_path = args.configuration_path
         self.log_path = args.log_path
         self.email_address = args.email_address
         self.email_only_on_fail = args.email_only_on_fail
@@ -18,6 +20,7 @@ class CustomCron(object):
         self.script_to_execute_args = args.script_to_execute_args
 
     def execute_script(self):
+        self._load_configuration_file()
         script_exit_code, script_output = self._execute_script()
         print(script_output)
         if self._is_log_needed():
@@ -25,9 +28,20 @@ class CustomCron(object):
         if self._is_email_needed():
             self._send_email(script_exit_code, script_output)
 
+    def _load_configuration_file(self):
+        if self.configuration_path is None or not os.path.isfile(self.configuration_path):
+            return
+        config = configparser.ConfigParser()
+        config.read(self.configuration_path)
+        self.log_path = config["log"]["path"]
+        self.email_address = config["email"]["to"]
+        self.email_only_on_fail = config["email"].getboolean("only_on_fail")
+        self.script_to_execute = config["script"]["path"]
+        self.script_to_execute_args = config["script"]["arguments"].split(' ')
+
     def _execute_script(self):
-        if not os.path.isfile(self.script_to_execute):
-            script_output = "ERROR : Script " + self.script_to_execute + " not found\n"
+        if self.script_to_execute is None or not os.path.isfile(self.script_to_execute):
+            script_output = "ERROR : Script {0} not found\n".format(self.script_to_execute)
             return 1, script_output
         script_args = [self.script_to_execute] + self.script_to_execute_args
         with TemporaryFile(mode='w+t', encoding='utf-8') as tmp_log:
@@ -65,12 +79,17 @@ class ArgumentsParser(object):
     def __init__(self):
         self.parser = argparse.ArgumentParser(
             description='Handle the execution of an other script in order to log and/or send the result by email')
+        self.parser.add_argument('--configuration',
+                                 action='store',
+                                 default=None,
+                                 dest='configuration_path',
+                                 help='path to the configuration file')
         self.parser.add_argument('--logfile',
                                  action='store',
                                  default=None,
                                  dest='log_path',
                                  help='path where to log the output')
-        self.parser.add_argument('--email',
+        self.parser.add_argument('--email_to',
                                  action='store',
                                  default=None,
                                  dest='email_address',
