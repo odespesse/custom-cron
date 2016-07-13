@@ -197,6 +197,16 @@ class TestCustomCron(unittest.TestCase):
         os.remove("./world_args")
         self.assertEqual(line, "Arg 1 :  - Arg 2 :  - Arg 3 : \n", "Content do not match")
 
+    def test_no_script_given(self):
+        self.args.configuration_path = os.getcwd() + '/empty_configuration.ini'
+        self.args.log_path = '/tmp/log'
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
+            line = f.read()
+        self.assertEqual(line, "ERROR : No script given\n", "Content do not match")
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()

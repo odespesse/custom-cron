@@ -58,7 +58,10 @@ class CustomCron(object):
             self.script_to_execute_args = config["script"]["arguments"].split(' ') if "arguments" in config["script"] else []
 
     def _execute_script(self):
-        if self.script_to_execute is None or not os.path.isfile(self.script_to_execute):
+        if self.script_to_execute is None:
+            script_output = "ERROR : No script given\n".format(self.script_to_execute)
+            return 1, script_output
+        if not os.path.isfile(self.script_to_execute):
             script_output = "ERROR : Script {0} not found\n".format(self.script_to_execute)
             return 1, script_output
         script_args = [self.script_to_execute] + self.script_to_execute_args
