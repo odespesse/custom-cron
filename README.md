@@ -93,6 +93,10 @@ The file is in a simple INI format. You just need to write a file like this (let
     path = /tmp/log
 
     [email]
+    smtp_host = smtp.gmail.com
+    smtp_port = 587
+    smtp_login = mylogin
+    smtp_password = mypassword
     to = your@email.com
     only_on_fail = no
 

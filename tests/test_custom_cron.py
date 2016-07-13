@@ -227,6 +227,16 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !', 'Bad message')
 
+    def test_configure_smtp_with_configuration_file(self):
+        self.server_thread = self._instanciate_local_smtp_server(1034)
+        local_smtp_server = self.server_thread.server
+        self.args.configuration_path = os.getcwd() + '/email_configuration.ini'
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        self.assertEqual(len(local_smtp_server.rcpttos), 1)
+        self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
+        self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !', 'Bad message')
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()

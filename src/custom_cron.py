@@ -20,7 +20,7 @@ class CustomCron(object):
             'host': None,
             'port': None,
             'login': None,
-            'password': None
+            'password': None,
         }
         self.script_to_execute = None
         self.script_to_execute_args = []
@@ -45,7 +45,7 @@ class CustomCron(object):
                 'host': args.smtp_host,
                 'port': args.smtp_port,
                 'login': args.smtp_login,
-                'password': args.smtp_password
+                'password': args.smtp_password,
             }
         if args.email_address is not None:
             self.email_address = args.email_address
@@ -64,6 +64,12 @@ class CustomCron(object):
         if "log" in config:
             self.log_path = config["log"]["path"] if "path" in config["log"] else None
         if "email" in config:
+            self.smtp_connection = {
+                'host': config["email"]["smtp_host"] if "smtp_host" in config["email"] else None,
+                'port': config["email"]["smtp_port"] if "smtp_port" in config["email"] else None,
+                'login': config["email"]["smtp_login"] if "smtp_login" in config["email"] else None,
+                'password': config["email"]["smtp_password"] if "smtp_password" in config["email"] else None,
+            }
             self.email_address = config["email"]["to"] if "to" in config["email"] else None
             self.email_only_on_fail = config["email"].getboolean("only_on_fail") if "only_on_fail" in config["email"] else False
         if "script" in config:
