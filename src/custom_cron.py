@@ -11,22 +11,37 @@ import configparser
 class CustomCron(object):
 
     def __init__(self, args, smtp_connection=None):
-        self.configuration_path = args.configuration_path
-        self.log_path = args.log_path
-        self.email_address = args.email_address
-        self.email_only_on_fail = args.email_only_on_fail
+        self.configuration_path = None
+        self.log_path = None
+        self.email_address = None
+        self.email_only_on_fail = False
         self.smtp_connection = smtp_connection
-        self.script_to_execute = args.script_to_execute
-        self.script_to_execute_args = args.script_to_execute_args
+        self.script_to_execute = None
+        self.script_to_execute_args = []
+        self._initialize_configuration(args)
 
     def execute_script(self):
-        self._load_configuration_file()
         script_exit_code, script_output = self._execute_script()
         print(script_output)
         if self._is_log_needed():
             self._write_log(script_output)
         if self._is_email_needed():
             self._send_email(script_exit_code, script_output)
+
+    def _initialize_configuration(self, args):
+        self.configuration_path = args.configuration_path
+        if self.configuration_path is not None:
+            self._load_configuration_file()
+        if args.log_path is not None:
+            self.log_path = args.log_path
+        if args.email_address is not None:
+            self.email_address = args.email_address
+        if self.email_only_on_fail != args.email_only_on_fail:
+            self.email_only_on_fail = args.email_only_on_fail
+        if args.script_to_execute is not None:
+            self.script_to_execute = args.script_to_execute
+        if len(args.script_to_execute_args) > 0:
+            self.script_to_execute_args = args.script_to_execute_args
 
     def _load_configuration_file(self):
         if self.configuration_path is None or not os.path.isfile(self.configuration_path):
@@ -108,7 +123,7 @@ class ArgumentsParser(object):
                                  help='arguments for the script to execute ')
 
     def parse(self, arguments):
-        return self.parser.parse_args(args = arguments)
+        return self.parser.parse_args(args=arguments)
 
 
 if __name__ == '__main__':
