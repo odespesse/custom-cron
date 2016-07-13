@@ -17,7 +17,7 @@ Handle the execution of an other script in order to log and/or send the result b
 
 	custom_cron.py \[-h\] \[\--configuration CONFIGURATION_PATH\] \[--logfile LOG_PATH\]
 	                \[--smtp_host HOSTNAME\] \[--smtp_port PORT\] \[--smtp_login LOGIN\] \[--smtp_password PASSWORD\]
-	                \[--email EMAIL_ADDRESS\]
+	                \[--email EMAIL_ADDRESS\] \[--email_only_on_fail\]
 	               \[--script_args SCRIPT_TO_EXECUTE_ARGS \[SCRIPT_TO_EXECUTE_ARGS ...\]\]
 			script_to_execute
 
