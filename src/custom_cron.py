@@ -48,11 +48,14 @@ class CustomCron(object):
             return
         config = configparser.ConfigParser()
         config.read(self.configuration_path)
-        self.log_path = config["log"]["path"]
-        self.email_address = config["email"]["to"]
-        self.email_only_on_fail = config["email"].getboolean("only_on_fail")
-        self.script_to_execute = config["script"]["path"]
-        self.script_to_execute_args = config["script"]["arguments"].split(' ')
+        if "log" in config:
+            self.log_path = config["log"]["path"] if "path" in config["log"] else None
+        if "email" in config:
+            self.email_address = config["email"]["to"] if "to" in config["email"] else None
+            self.email_only_on_fail = config["email"].getboolean("only_on_fail") if "only_on_fail" in config["email"] else False
+        if "script" in config:
+            self.script_to_execute = config["script"]["path"] if "path" in config["script"] else None
+            self.script_to_execute_args = config["script"]["arguments"].split(' ') if "arguments" in config["script"] else []
 
     def _execute_script(self):
         if self.script_to_execute is None or not os.path.isfile(self.script_to_execute):

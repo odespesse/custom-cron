@@ -188,6 +188,15 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(local_smtp_server.rcpttos[0], 'admin@company.com', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : FAIL] <' + os.uname()[1] + '> : ./error.sh\nFrom: custom_cron\nTo: admin@company.com\n\nSo far so good !\ncp: missing file operand\nTry \'cp --help\' for more information.', 'Bad message')
 
+    def test_minimalist_configuration_file(self):
+        self.args.configuration_path = os.getcwd() + '/minimalist_configuration.ini'
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        with open("./world_args", 'r') as f:
+            line = f.readline()
+        os.remove("./world_args")
+        self.assertEqual(line, "Arg 1 :  - Arg 2 :  - Arg 3 : \n", "Content do not match")
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()
