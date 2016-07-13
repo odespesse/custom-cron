@@ -15,7 +15,9 @@ Then you need to copy the file custom_cron.py on your system and make sure it is
 
 Handle the execution of an other script in order to log and/or send the result by email
 
-	custom_cron.py \[-h\] \[\--configuration CONFIGURATION_PATH\] \[--logfile LOG_PATH\] \[--email EMAIL_ADDRESS\]
+	custom_cron.py \[-h\] \[\--configuration CONFIGURATION_PATH\] \[--logfile LOG_PATH\]
+	                \[--smtp_host HOSTNAME\] \[--smtp_port PORT\] \[--smtp_login LOGIN\] \[--smtp_password PASSWORD\]
+	                \[--email EMAIL_ADDRESS\]
 	               \[--script_args SCRIPT_TO_EXECUTE_ARGS \[SCRIPT_TO_EXECUTE_ARGS ...\]\]
 			script_to_execute
 
@@ -27,6 +29,18 @@ Handle the execution of an other script in order to log and/or send the result b
 
 	--logfile 
 		path where to log the output
+
+    --smtp_host
+        URL or IP address of the SMTP server
+
+    --smtp_port
+        port of the SMTP server (default: 25)
+
+    --smtp_login
+        login of the account on the SMTP server
+
+    --smtp_password
+        password of the account on the SMTP server
 
 	--email
 		email address (comma separated) to send the output

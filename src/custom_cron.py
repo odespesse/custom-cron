@@ -1,7 +1,8 @@
 #! /usr/bin/python3
 # -*- encoding: utf8 -*-
 
-import subprocess, smtplib, os, sys
+import subprocess, os, sys
+from smtplib import SMTP, SMTPNotSupportedError
 from tempfile import TemporaryFile
 from email.mime.text import MIMEText
 import argparse
@@ -10,12 +11,17 @@ import configparser
 
 class CustomCron(object):
 
-    def __init__(self, args, smtp_connection=None):
+    def __init__(self, args):
         self.configuration_path = None
         self.log_path = None
         self.email_address = None
         self.email_only_on_fail = False
-        self.smtp_connection = smtp_connection
+        self.smtp_connection = {
+            'host': None,
+            'port': None,
+            'login': None,
+            'password': None
+        }
         self.script_to_execute = None
         self.script_to_execute_args = []
         self._initialize_configuration(args)
@@ -34,6 +40,13 @@ class CustomCron(object):
             self._load_configuration_file()
         if args.log_path is not None:
             self.log_path = args.log_path
+        if args.smtp_host is not None:
+            self.smtp_connection = {
+                'host': args.smtp_host,
+                'port': args.smtp_port,
+                'login': args.smtp_login,
+                'password': args.smtp_password
+            }
         if args.email_address is not None:
             self.email_address = args.email_address
         if self.email_only_on_fail != args.email_only_on_fail:
@@ -83,7 +96,6 @@ class CustomCron(object):
 
     def _send_email(self, script_exit_code, script_output):
         if self.email_only_on_fail and script_exit_code == 0:
-            self.smtp_connection.quit()
             return
         subject = "[Cron : OK]" if script_exit_code == 0 else "[Cron : FAIL]"
         msg = MIMEText(script_output)
@@ -91,8 +103,23 @@ class CustomCron(object):
         msg['Subject'] = "{0} <{1}> : {2}".format(subject, hostname, self.script_to_execute)
         msg['From'] = 'custom_cron'
         msg['To'] = self.email_address
-        self.smtp_connection.sendmail('custom_cron', self.email_address.split(','), msg.as_string())
-        self.smtp_connection.quit()
+        smtp_connection = self._connect_to_smtp()
+        smtp_connection.sendmail('custom_cron', self.email_address.split(','), msg.as_string())
+        smtp_connection.quit()
+
+    def _connect_to_smtp(self):
+        smtp_ten_minutes_timeout = 10*60
+        smtp_connection = SMTP(self.smtp_connection['host'], self.smtp_connection['port'], smtp_ten_minutes_timeout)
+        smtp_connection.ehlo()
+        try:
+            smtp_connection.starttls()
+            smtp_connection.ehlo()
+        except SMTPNotSupportedError:
+            # STARTTLS is not supported by the SMTP server, continue
+            pass
+        if self.smtp_connection['login'] is not None or self.smtp_connection['password'] is not None:
+            smtp_connection.login(self.smtp_connection['login'], self.smtp_connection['password'])
+        return smtp_connection
 
 
 class ArgumentsParser(object):
@@ -110,6 +137,26 @@ class ArgumentsParser(object):
                                  default=None,
                                  dest='log_path',
                                  help='path where to log the output')
+        self.parser.add_argument('--smtp_host',
+                                 action='store',
+                                 default=None,
+                                 dest='smtp_host',
+                                 help='URL or IP address of the SMTP server')
+        self.parser.add_argument('--smtp_port',
+                                 action='store',
+                                 default=25,
+                                 dest='smtp_port',
+                                 help='port of the SMTP server (default: 25)')
+        self.parser.add_argument('--smtp_login',
+                                 action='store',
+                                 default=None,
+                                 dest='smtp_login',
+                                 help='login of the account on the SMTP server')
+        self.parser.add_argument('--smtp_password',
+                                 action='store',
+                                 default=None,
+                                 dest='smtp_password',
+                                 help='password of the account on the SMTP server')
         self.parser.add_argument('--email_to',
                                  action='store',
                                  default=None,
@@ -134,10 +181,5 @@ class ArgumentsParser(object):
 
 if __name__ == '__main__':
     args = ArgumentsParser().parse(sys.argv[1:])
-    smtp_connection = smtplib.SMTP("smtp.gmail.com", 587)
-    smtp_connection.ehlo()
-    smtp_connection.starttls()
-    smtp_connection.ehlo()
-    smtp_connection.login('login', 'pwd')
-    custom_cron = CustomCron(args, smtp_connection)
+    custom_cron = CustomCron(args)
     custom_cron.execute_script()
