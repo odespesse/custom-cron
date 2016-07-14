@@ -23,6 +23,7 @@ class CustomCron(object):
             'password': None,
         }
         self.script_to_execute = None
+        self.script_to_execute_timeout = None
         self.script_to_execute_args = []
         self._initialize_configuration(args)
 
@@ -53,6 +54,8 @@ class CustomCron(object):
             self.email_only_on_fail = args.email_only_on_fail
         if args.script_to_execute is not None:
             self.script_to_execute = args.script_to_execute
+        if args.script_to_execute_timeout is not None:
+            self.script_to_execute_timeout = args.script_to_execute_timeout
         if len(args.script_to_execute_args) > 0:
             self.script_to_execute_args = args.script_to_execute_args
 
@@ -85,7 +88,13 @@ class CustomCron(object):
             return 1, script_output
         script_args = [self.script_to_execute] + self.script_to_execute_args
         with TemporaryFile(mode='w+t', encoding='utf-8') as tmp_log:
-            script_exit_code = subprocess.call(script_args, stdout=tmp_log, stderr=subprocess.STDOUT)
+            try:
+                script_exit_code = subprocess.call(script_args,
+                                                   stdout=tmp_log,
+                                                   stderr=subprocess.STDOUT,
+                                                   timeout=self.script_to_execute_timeout)
+            except subprocess.TimeoutExpired:
+                return 1, "ERROR : Timeout exceeded\n"
             tmp_log.seek(0)
             script_output = tmp_log.read()
         return script_exit_code, script_output
@@ -173,6 +182,11 @@ class ArgumentsParser(object):
                                  default=False,
                                  dest='email_only_on_fail',
                                  help='send an email only if the script to execute failed')
+        self.parser.add_argument('--script_to_execute_timeout',
+                                 action='store',
+                                 default=None,
+                                 dest='script_to_execute_timeout',
+                                 help='timeout in sec for the script to execute')
         self.parser.add_argument('script_to_execute',
                                  help='the script to execute')
         self.parser.add_argument('--script_args',

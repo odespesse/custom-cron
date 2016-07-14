@@ -237,6 +237,17 @@ class TestCustomCron(unittest.TestCase):
         self.assertEqual(local_smtp_server.rcpttos[0], 'test@localhost', 'Wrong dest email')
         self.assertEqual(local_smtp_server.data, 'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\nSubject: [Cron : OK] <' + os.uname()[1] + '> : ./hello.sh\nFrom: custom_cron\nTo: test@localhost\n\nSo far so good !', 'Bad message')
 
+    def test_exceeded_timeout_cli(self):
+        self.args.script_to_execute = './timeout.sh'
+        self.args.log_path = '/tmp/log'
+        self.args.script_to_execute_timeout = 1
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
+            line = f.read()
+        self.assertEqual(line, "ERROR : Timeout exceeded\n", "Content do not match")
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()
@@ -257,6 +268,7 @@ class ScriptArguments(object):
         self.email_address = None
         self.email_only_on_fail = False
         self.script_to_execute = None
+        self.script_to_execute_timeout = None
         self.script_to_execute_args = []
 
 
