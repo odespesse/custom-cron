@@ -248,6 +248,15 @@ class TestCustomCron(unittest.TestCase):
             line = f.read()
         self.assertEqual(line, "ERROR : Timeout exceeded\n", "Content do not match")
 
+    def test_exceeded_timeout_configuration_file(self):
+        self.args.configuration_path = os.getcwd() + '/timeout_configuration.ini'
+        custom_cron = CustomCron(self.args)
+        custom_cron.execute_script()
+        self.assertTrue(os.path.isfile("/tmp/log"), "No log file created")
+        with open("/tmp/log", 'r') as f:
+            line = f.read()
+        self.assertEqual(line, "ERROR : Timeout exceeded\n", "Content do not match")
+
     def _instanciate_local_smtp_server(self, port):
         smtp_server = LocalSMTPServer(port)
         smtp_server.start()

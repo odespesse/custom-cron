@@ -91,6 +91,7 @@ The file is in a simple INI format. You just need to write a file like this (let
     [script]
     path = ./hello.sh
     arguments = Hello world
+    timeout = 60
 
     [log]
     path = /tmp/log

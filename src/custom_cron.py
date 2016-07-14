@@ -77,6 +77,7 @@ class CustomCron(object):
             self.email_only_on_fail = config["email"].getboolean("only_on_fail") if "only_on_fail" in config["email"] else False
         if "script" in config:
             self.script_to_execute = config["script"]["path"] if "path" in config["script"] else None
+            self.script_to_execute_timeout = config["script"].getint("timeout") if "timeout" in config["script"] else None
             self.script_to_execute_args = config["script"]["arguments"].split(' ') if "arguments" in config["script"] else []
 
     def _execute_script(self):
